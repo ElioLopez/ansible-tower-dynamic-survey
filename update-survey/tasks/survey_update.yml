@@ -1,0 +1,42 @@
+
+#Subtask to update survey 
+- name: "Get current survey from {{ template_id }} survey"
+  uri:
+    url: "{{ tower_endpoint }}workflow_job_templates/{{ template_id }}/survey_spec/"
+    method: GET
+    user: "{{ tower_user }}"
+    password: "{{ tower_pass }}"
+    validate_certs: False
+    force_basic_auth: yes
+    status_code: 200
+    body_format: json  
+  register: current_survey
+
+- name: "Remove the list element which containes {{ match_value }} variable"
+  set_fact: 
+       edited_spec_list: "{{ current_survey.json.spec|rejectattr( match_key , 'match', match_value)|list }}"
+
+- name: Generate the new spec list
+  set_fact: 
+      final_spec_list: "{{ new_services_list + edited_spec_list }}"
+
+- name: Create and add items to new_survey dictionary
+  set_fact: 
+      new_survey: "{{ new_survey | default({}) | combine ({ item.key : item.value }) }}"
+  with_items:
+    - { 'key': 'description' , 'value': ''}
+    - { 'key': 'name' , 'value': ''}
+    - { 'key': 'spec' , 'value': "{{ final_spec_list }}" }
+
+- name: "put the survey back on {{ template_id }} survey playbook"
+  uri:
+    url: "{{ tower_endpoint }}workflow_job_templates/{{ template_id }}/survey_spec/"
+    method: POST
+    user: "{{ tower_user }}"
+    password: "{{ tower_pass }}"
+    validate_certs: False
+    force_basic_auth: yes
+    status_code: 200
+    body:
+      "{{ new_survey }}"  
+    body_format: json  

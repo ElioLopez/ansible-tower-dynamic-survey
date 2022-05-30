@@ -1,0 +1,19 @@
+---
+# tasks file for survey-update
+
+- name: services_list build
+  set_fact:
+    services_list: "service1\nservice2\nservice3\nservice4\nservice5\n"
+
+- name: services_list debug
+  debug: 
+    msg: "{{ services_list }}"
+
+- name: Create the new services list element with updated choices
+  set_fact: 
+      new_services_list: "{{ new_services_list | default([]) + [ { 'question_description': item.question_description, 'min': item.min, 'default': item.default, 'max': item.max, 'required': item.required, 'choices': item.choices, 'variable': item.variable, 'question_name': item.question_name, 'type': item.type}] }}"
+  with_items:
+     - { 'question_description': 'Service to be removed', 'min': null, 'default': '', 'max': null, 'required': true, 'choices': "{{ services_list }}", 'variable': "{{ match_value }}", 'question_name': 'service', 'type': 'multiplechoice'}
+
+- name: Update surveys for workflow job templates
+  include: survey_update.yml template_id={{ target_template }} new_services_list={{ new_services_list }} 

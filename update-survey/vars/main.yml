@@ -1,0 +1,12 @@
+---
+# vars file for update-survey
+tower_user: user
+tower_pass: password
+
+tower_endpoint: "https://tower.example.org/api/v2/"
+
+match_key: "variable" # the key to match in the survey list element
+match_value: "service" # the value to match in the survey list element
+
+target_template: 9  #target templates id
+
